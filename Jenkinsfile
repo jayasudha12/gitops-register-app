@@ -1,14 +1,8 @@
 pipeline {
     agent { label "jenkins-Agent" }
 
-    parameters {
-        string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'Docker Image Tag to deploy')
-    }
-
     environment {
-        APP_NAME    = "register-app"
-        DOCKER_USER = "puvisha007"
-        IMAGE_NAME  = "${DOCKER_USER}/${APP_NAME}"
+        APP_NAME = "register-app"
     }
 
     stages {
@@ -27,42 +21,35 @@ pipeline {
             }
         }
 
-        stage("Update the Deployment Image Tag") {
+        stage("Update Deployment Image Tag") {
             steps {
-                script {
-                    sh """
-                        echo "✅ Before update:"
-                        cat deployment.yaml
+                sh """
+                    echo "Before update:"
+                    cat deployment.yaml
 
-                        # ✅ Update ONLY image field (Safe fix)
-                        sed -i 's|image: ${IMAGE_NAME}:.*|image: ${IMAGE_NAME}:${IMAGE_TAG}|g' deployment.yaml
+                    # ✅ Replace only the image tag line
+                    sed -i 's|image: ${APP_NAME}.*|image: puvisha007/${APP_NAME}:${IMAGE_TAG}|g' deployment.yaml
 
-                        echo "✅ After update:"
-                        cat deployment.yaml
-                    """
-                }
+                    echo "After update:"
+                    cat deployment.yaml
+                """
             }
         }
 
         stage("Push the changed deployment file to Git") {
             steps {
-                script {
-                    sh """
-                        git config --global user.name "jayasudha12"
-                        git config --global user.email "puvishapa@gmail.com"
+                sh """
+                    git config --global user.name "jayasudha12"
+                    git config --global user.email "puvishapa@gmail.com"
 
-                        git add deployment.yaml
+                    git add deployment.yaml
+                    git commit -m "Updated image tag to ${IMAGE_TAG}" || echo "No changes to commit"
+                """
 
-                        # ✅ Avoid failing if no changes
-                        git diff --cached --quiet || git commit -m "Updated Deployment Image Tag to ${IMAGE_TAG}"
-                    """
-
-                    withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
-                        sh "git push https://github.com/jayasudha12/gitops-register-app.git main"
-                    }
+                withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
+                    sh "git push https://github.com/jayasudha12/gitops-register-app.git main"
                 }
             }
         }
-
     }
 }
