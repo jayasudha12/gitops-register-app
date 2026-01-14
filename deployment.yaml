@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: register-app:1.0.0-25
-          image: puvisha007/register-app:1.0.0-25
+          image: puvisha007/register-app:1.0.0-26
           resources:
             limits:
               memory: "256Mi"
