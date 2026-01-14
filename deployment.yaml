@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: register-app-deployment
+  name: register-app:1.0.0-25
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: register-app
+      app: register-app:1.0.0-25
   template:
     metadata:
       labels:
-        app: register-app
+        app: register-app:1.0.0-25
     spec:
       containers:
-        - name: register-app
-          image: puvisha007/register-app:1.0.0-20
+        - name: register-app:1.0.0-25
+          image: puvisha007/register-app:1.0.0-25
           resources:
             limits:
               memory: "256Mi"
