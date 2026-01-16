@@ -8,9 +8,7 @@ pipeline {
     stages {
 
         stage("Cleanup Workspace") {
-            steps {
-                cleanWs()
-            }
+            steps { cleanWs() }
         }
 
         stage("Checkout from SCM") {
@@ -27,8 +25,8 @@ pipeline {
                     echo "Before update:"
                     cat deployment.yaml
 
-                    # ✅ Replace only the image tag line
-                    sed -i 's|image: ${APP_NAME}.*|image: puvisha007/${APP_NAME}:${IMAGE_TAG}|g' deployment.yaml
+                    # ✅ Replace the full image line (works always)
+                    sed -i "s|image:.*|image: puvisha007/${APP_NAME}:${IMAGE_TAG}|g" deployment.yaml
 
                     echo "After update:"
                     cat deployment.yaml
@@ -49,6 +47,24 @@ pipeline {
                 withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
                     sh "git push https://github.com/jayasudha12/gitops-register-app.git main"
                 }
+            }
+        }
+
+        stage("Deploy to EKS") {
+            steps {
+                sh """
+                    echo "Applying deployment to EKS..."
+                    kubectl apply -f deployment.yaml
+
+                    echo "Restarting rollout..."
+                    kubectl rollout restart deployment/${APP_NAME}
+
+                    echo "Waiting for rollout..."
+                    kubectl rollout status deployment/${APP_NAME} --timeout=180s
+
+                    echo "✅ Running image now:"
+                    kubectl describe deploy ${APP_NAME} | grep -i image
+                """
             }
         }
     }
