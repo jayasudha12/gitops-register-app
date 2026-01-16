@@ -1,6 +1,10 @@
 pipeline {
     agent { label "jenkins-Agent" }
 
+    parameters {
+        string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'Docker image tag passed from CI pipeline')
+    }
+
     environment {
         APP_NAME = "register-app"
     }
@@ -22,10 +26,11 @@ pipeline {
         stage("Update Deployment Image Tag") {
             steps {
                 sh """
+                    echo "✅ IMAGE_TAG received: ${IMAGE_TAG}"
+
                     echo "Before update:"
                     cat deployment.yaml
 
-                    # ✅ Replace the full image line (works always)
                     sed -i "s|image:.*|image: puvisha007/${APP_NAME}:${IMAGE_TAG}|g" deployment.yaml
 
                     echo "After update:"
